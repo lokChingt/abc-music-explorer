@@ -17,15 +17,14 @@ def parse_tune(book, tune_lines):
         'book': book,
         'tune_id': None,
         'title': None,
-        'alt_title': [],
+        'alt_title': None,
         'tune_type': None,
         'key_signature': None,
         'notation': ''.join(tune_lines)
     }
 
-    first_title = False
-
-    tune['notation'] = ''.join(tune_lines)
+    primary_title = False
+    alt_title = False
     
     for line in tune_lines:
         line = line.strip()
@@ -34,11 +33,12 @@ def parse_tune(book, tune_lines):
             tune['tune_id'] = line[start_i:]
 
         elif line.startswith('T:'):
-            if first_title == False: # first title
+            if primary_title == False: # first title
                 tune['title'] = line[start_i:]
-                first_title = True
-            else:                   # alt title
-                tune['alt_title'].append(line[start_i:])
+                primary_title = True
+            elif alt_title == False:   # alt title
+                tune['alt_title'] = (line[start_i:])
+                alt_title = True
 
         elif line.startswith('R:'):
             tune['tune_type'] = line[start_i:]
@@ -46,7 +46,6 @@ def parse_tune(book, tune_lines):
         elif line.startswith('K:'):
             tune['key_signature'] = line[start_i:]
 
-    tune['alt_title'] = tuple(tune['alt_title'])
     return tune
 
 
