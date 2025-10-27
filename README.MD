@@ -1,6 +1,8 @@
+# Data Centric Programming Assignment 2025
+
 # ABC Music Database Explorer
 
-- [Assignment brief](assignment.md)
+- A Traditional Irish Music Database Explorer built with Python, MySQL (Database) and Tkinter (UI)
 
 Name: Lok Ching Tam
 
@@ -8,9 +10,7 @@ Student Number: C24385243
 
 Class Group: TU850 Data Science & AI
 
-# Video
-
-[![YouTube](http://img.youtube.com/vi/J2kHSSFA4NU/0.jpg)](https://www.youtube.com/watch?v=J2kHSSFA4NU)
+# Video Demo
 
 # Screenshots
 
