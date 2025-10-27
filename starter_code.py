@@ -1,8 +1,10 @@
+# Starter code for Data Centric Programming Assignment 2025
+
 # os is a module that lets us access the file system
 
 import os 
 import sqlite3
-# sqlite for connecting to sqlite embedded database
+# sqlite for connecting to sqlite databases
 
 # An example of how to create a table, insert data
 # and run a select query
@@ -47,7 +49,7 @@ def process_file(file):
         pass
 
 
-do_databasse_stuff()
+# do_databasse_stuff()
 
 # Iterate over directories in abc_books
 for item in os.listdir(books_dir):
