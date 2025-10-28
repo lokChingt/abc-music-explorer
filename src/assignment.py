@@ -27,24 +27,23 @@ def parse_tune(book, tune_lines):
     alt_title = False
     
     for line in tune_lines:
-        line = line.strip()
         start_i = 2
         if line.startswith('X:'):
-            tune['tune_id'] = line[start_i:]
+            tune['tune_id'] = line[start_i:].strip()
 
         elif line.startswith('T:'):
             if primary_title == False: # first title
-                tune['title'] = line[start_i:]
+                tune['title'] = line[start_i:].strip()
                 primary_title = True
             elif alt_title == False:   # alt title
-                tune['alt_title'] = (line[start_i:])
+                tune['alt_title'] = line[start_i:].strip()
                 alt_title = True
 
         elif line.startswith('R:'):
-            tune['tune_type'] = line[start_i:]
+            tune['tune_type'] = line[start_i:].strip()
 
         elif line.startswith('K:'):
-            tune['key_signature'] = line[start_i:]
+            tune['key_signature'] = line[start_i:].strip()
             return tune
 
     return tune
