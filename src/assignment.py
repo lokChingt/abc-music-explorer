@@ -17,36 +17,41 @@ def parse_tune(book, tune_lines):
         'book': book,
         'tune_id': None,
         'title': None,
-        'alt_title': None,
         'tune_type': None,
         'key_signature': None,
         'notation': ''.join(tune_lines)
     }
 
     primary_title = False
-    alt_title = False
+
+    tune_alt_title = {
+        'book': book,
+        'tune_id': None,
+        'alt_title': []
+    }
     
     for line in tune_lines:
         start_i = 2
         if line.startswith('X:'):
-            tune['tune_id'] = line[start_i:].strip()
+            value = line[start_i:].strip()
+            tune['tune_id'] = value
+            tune_alt_title['tune_id'] = value
 
         elif line.startswith('T:'):
             if primary_title == False: # first title
                 tune['title'] = line[start_i:].strip()
                 primary_title = True
-            elif alt_title == False:   # alt title
-                tune['alt_title'] = line[start_i:].strip()
-                alt_title = True
+            else:                      # alt title
+                tune_alt_title['alt_title'].append(line[start_i:].strip())
 
         elif line.startswith('R:'):
             tune['tune_type'] = line[start_i:].strip()
 
         elif line.startswith('K:'):
             tune['key_signature'] = line[start_i:].strip()
-            return tune
+            return tune, tune_alt_title
 
-    return tune
+    return tune, tune_alt_title
 
 
 def parse_all_tunes(book, lines):
@@ -57,17 +62,21 @@ def parse_all_tunes(book, lines):
     for line in lines:
         """Implement tune boundary detection"""
         if line.startswith("X:") or in_tune == True: # tune starts
-            if line.strip() == "": # tune ends
+            if line.strip() == "":                   # tune ends
                 in_tune = False
                 """Call parse_tune() for each complete tune"""
-                tunes.append(parse_tune(book, current_tune_lines))
+                tune, alt_title = parse_tune(book, current_tune_lines)
+                tunes.append(tune)
+                alt_titles.append(alt_title)
                 current_tune_lines = [] # reset for each tune
             else:
                 current_tune_lines += [line]
                 in_tune = True
     
     # parse the last tune in the each file
-    tunes.append(parse_tune(book, current_tune_lines))
+    tune_result = parse_tune(book, current_tune_lines)
+    tunes.append(tune_result[0])
+    alt_titles.append(tune_result[1])
     
     return
 
@@ -81,6 +90,7 @@ files = sorted(files) # Sort alphabetically
 
 # Add tune dicts into tunes list
 tunes = []
+alt_titles = []
 for file in files:
     lines = load_abc_file(file)
     book = file.parent.name
@@ -89,6 +99,8 @@ for file in files:
 
 # Create DataFrame
 df = pd.DataFrame(tunes)
+df2 = pd.DataFrame(alt_titles)
 
 # Export to csv
 df.to_csv('src/parsed_tunes.csv', index=False)
+df2.to_csv('src/parsed_alt_titles.csv', index=False)
