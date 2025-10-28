@@ -10,3 +10,12 @@ CREATE TABLE tunes
     key_signature   VARCHAR(20),
     notation        TEXT
 );
+
+DROP DATABASE IF EXISTS tune_alt_titles;
+CREATE TABLE tune_alt_titles
+(
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    book            INT,
+    tune_id         VARCHAR(20),
+    alt_title       VARCHAR(255),
+);
