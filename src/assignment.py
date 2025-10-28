@@ -66,7 +66,10 @@ def parse_all_tunes(book, lines):
             else:
                 current_tune_lines += [line]
                 in_tune = True
-            
+    
+    # parse the last tune in the each file
+    tunes.append(parse_tune(book, current_tune_lines))
+    
     return
 
 
