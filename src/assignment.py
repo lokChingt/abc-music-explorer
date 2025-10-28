@@ -45,6 +45,7 @@ def parse_tune(book, tune_lines):
 
         elif line.startswith('K:'):
             tune['key_signature'] = line[start_i:]
+            return tune
 
     return tune
 
@@ -73,7 +74,7 @@ def parse_all_tunes(book, lines):
 # Find all ABC files
 folder_path = Path("abc_books/")
 files = [f for f in folder_path.rglob("*.abc") if f.is_file()]
-files = sorted(files) # Sort alphaalphabetically
+files = sorted(files) # Sort alphabetically
 
 
 # Add tune dicts into tunes list
