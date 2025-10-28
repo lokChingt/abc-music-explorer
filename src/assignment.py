@@ -67,16 +67,17 @@ def parse_all_tunes(book, lines):
                 """Call parse_tune() for each complete tune"""
                 tune, alt_title = parse_tune(book, current_tune_lines)
                 tunes.append(tune)
-                alt_titles.append(alt_title)
+                tune_alt_title.append(alt_title)
                 current_tune_lines = [] # reset for each tune
             else:
                 current_tune_lines += [line]
                 in_tune = True
     
     # parse the last tune in the each file
-    tune_result = parse_tune(book, current_tune_lines)
-    tunes.append(tune_result[0])
-    alt_titles.append(tune_result[1])
+    if current_tune_lines:
+        tune, alt_title = parse_tune(book, current_tune_lines)
+        tunes.append(tune)
+        tune_alt_title.append(alt_title)
     
     return
 
@@ -90,7 +91,7 @@ files = sorted(files) # Sort alphabetically
 
 # Add tune dicts into tunes list
 tunes = []
-alt_titles = []
+tune_alt_title = []
 for file in files:
     lines = load_abc_file(file)
     book = file.parent.name
@@ -99,8 +100,8 @@ for file in files:
 
 # Create DataFrame
 df = pd.DataFrame(tunes)
-df2 = pd.DataFrame(alt_titles)
+df2 = pd.DataFrame(tune_alt_title)
 
 # Export to csv
 df.to_csv('src/parsed_tunes.csv', index=False)
-df2.to_csv('src/parsed_alt_titles.csv', index=False)
+df2.to_csv('src/parsed_tune_alt_title.csv', index=False)
