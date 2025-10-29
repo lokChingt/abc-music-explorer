@@ -1,6 +1,7 @@
 import pandas as pd
 import mysql.connector
 from pathlib import Path
+import json
 
 
 def load_abc_file(file_path):
@@ -25,17 +26,13 @@ def parse_tune(book, tune_lines):
     primary_title = False
 
     tune_alt_title = {
-        'book': book,
-        'tune_id': None,
         'alt_title': []
     }
     
     for line in tune_lines:
         start_i = 2
         if line.startswith('X:'):
-            value = line[start_i:].strip()
-            tune['tune_id'] = value
-            tune_alt_title['tune_id'] = value
+            tune['tune_id'] = line[start_i:].strip()
 
         elif line.startswith('T:'):
             if primary_title == False: # first title
@@ -98,10 +95,52 @@ for file in files:
     parse_all_tunes(book, lines)
 
 
-# Create DataFrame
-df = pd.DataFrame(tunes)
-df2 = pd.DataFrame(tune_alt_title)
 
-# Export to csv
-df.to_csv('src/parsed_tunes.csv', index=False)
-df2.to_csv('src/parsed_tune_alt_title.csv', index=False)
+# connect to MySQL
+config_path = Path(__file__).parent.parent / "config.json"
+
+with open(config_path) as f:
+    config = json.load(f)
+
+
+conn = mysql.connector.connect(
+    host="localhost",
+    user=config["user"],
+    password=config["password"],
+    database=config["database"]
+)
+cursor = conn.cursor()
+
+
+# === insert data into tunes ===
+cols = tunes[0].keys() 
+
+placeholders = ",".join(["%s"] * len(cols))
+cols_str = ",".join(cols)
+
+query = f"INSERT INTO tunes ({cols_str}) VALUES ({placeholders})"
+
+# convert list of dicts to list of tuples
+vals = [tuple(tune.values()) for tune in tunes]
+
+# insert data
+cursor.executemany(query, vals)
+conn.commit()
+
+
+# === insert data into tune_alt_titles ===
+vals = []
+
+for tune_id, row in enumerate(tune_alt_title, 1):
+    alt_titles = row['alt_title']
+    if alt_titles:
+        for alt_title in alt_titles:
+            vals.append((tune_id, alt_title))
+    else:  # no alt_titles
+        vals.append((tune_id, None))
+
+query = "INSERT INTO tune_alt_titles (tune_id, alt_title) VALUES (%s, %s)"
+cursor.executemany(query, vals)
+conn.commit()
+
+conn.close()
