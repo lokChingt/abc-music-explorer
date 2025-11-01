@@ -1,8 +1,14 @@
+"""
+Data Centric Programming Assignment 2025
+Name: Lok Ching Tam
+Student Number: C24385243
+Course: TU850/2
+"""
+
 import pandas as pd
 import mysql.connector
 from pathlib import Path
 import json
-
 
 def load_abc_file(file_path):
     """Load ABC file into list of lines"""
@@ -23,12 +29,13 @@ def parse_tune(book, tune_lines):
         'notation': ''.join(tune_lines)
     }
 
-    primary_title = False
-
     tune_alt_title = {
         'alt_title': []
     }
+
+    primary_title = False
     
+    """add values into tune & tune_alt_title dict"""
     for line in tune_lines:
         start_i = 2
         if line.startswith('X:'):
@@ -75,18 +82,65 @@ def parse_all_tunes(book, lines):
         tune, alt_title = parse_tune(book, current_tune_lines)
         tunes.append(tune)
         tune_alt_title.append(alt_title)
-    
-    return
+
+
+def connect_mysql():
+    """connect to MySQL"""
+    config_path = Path(__file__).parent.parent / "config.json"
+
+    with open(config_path) as f:
+        config = json.load(f)
+
+    conn = mysql.connector.connect(
+        host="localhost",
+        user=config["user"],
+        password=config["password"],
+        database=config["database"]
+    )
+    return conn
+
+
+def db_insert_tunes():
+    """insert data into tunes"""
+    cols = tunes[0].keys() 
+
+    placeholders = ",".join(["%s"] * len(cols))
+    cols_str = ",".join(cols)
+
+    query = f"INSERT INTO tunes ({cols_str}) VALUES ({placeholders})"
+
+    # convert list of dicts to list of tuples
+    vals = [tuple(tune.values()) for tune in tunes]
+
+    # insert data
+    cursor.executemany(query, vals)
+    conn.commit()
+
+
+def db_insert_alt_titles():
+    """insert data into tune_alt_titles"""
+    vals = []
+
+    for tune_id, row in enumerate(tune_alt_title, 1):
+        alt_titles = row['alt_title']
+        if alt_titles:
+            for alt_title in alt_titles:
+                vals.append((tune_id, alt_title))
+        else:  # no alt_titles
+            vals.append((tune_id, None))
+
+    query = "INSERT INTO tune_alt_titles (tune_id, alt_title) VALUES (%s, %s)"
+    cursor.executemany(query, vals)
+    conn.commit()
 
 
 
-# Find all ABC files
+# find all abc files
 folder_path = Path("abc_books/")
 files = [f for f in folder_path.rglob("*.abc") if f.is_file()]
 files = sorted(files) # Sort alphabetically
 
-
-# Add tune dicts into tunes list
+# parse all tunes and alt_titles
 tunes = []
 tune_alt_title = []
 for file in files:
@@ -94,53 +148,13 @@ for file in files:
     book = file.parent.name
     parse_all_tunes(book, lines)
 
-
-
-# connect to MySQL
-config_path = Path(__file__).parent.parent / "config.json"
-
-with open(config_path) as f:
-    config = json.load(f)
-
-
-conn = mysql.connector.connect(
-    host="localhost",
-    user=config["user"],
-    password=config["password"],
-    database=config["database"]
-)
+# connect to database
+conn = connect_mysql()
 cursor = conn.cursor()
 
+# insert data into db
+db_insert_tunes()
+db_insert_alt_titles()
 
-# === insert data into tunes ===
-cols = tunes[0].keys() 
-
-placeholders = ",".join(["%s"] * len(cols))
-cols_str = ",".join(cols)
-
-query = f"INSERT INTO tunes ({cols_str}) VALUES ({placeholders})"
-
-# convert list of dicts to list of tuples
-vals = [tuple(tune.values()) for tune in tunes]
-
-# insert data
-cursor.executemany(query, vals)
-conn.commit()
-
-
-# === insert data into tune_alt_titles ===
-vals = []
-
-for tune_id, row in enumerate(tune_alt_title, 1):
-    alt_titles = row['alt_title']
-    if alt_titles:
-        for alt_title in alt_titles:
-            vals.append((tune_id, alt_title))
-    else:  # no alt_titles
-        vals.append((tune_id, None))
-
-query = "INSERT INTO tune_alt_titles (tune_id, alt_title) VALUES (%s, %s)"
-cursor.executemany(query, vals)
-conn.commit()
-
+# close db connection
 conn.close()
