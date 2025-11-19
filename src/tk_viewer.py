@@ -32,7 +32,7 @@ def get_statistics(df):
 def get_all_tunes():
     """Get all tunes"""
     cursor = conn.cursor()
-    cursor.execute(f"SELECT book, title, tune_type, key_signature FROM tunes")
+    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes")
     result = cursor.fetchall()
     return result
 
@@ -40,7 +40,7 @@ def get_all_tunes():
 def get_tunes_by_book(book_num):
     """Get all tunes from a specific book"""
     cursor = conn.cursor()
-    cursor.execute(f"SELECT book, title, tune_type, key_signature FROM tunes WHERE book = '{book_num}'")
+    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE book = '{book_num}'")
     result = cursor.fetchall()
     return result
 
@@ -48,7 +48,7 @@ def get_tunes_by_book(book_num):
 def get_tunes_by_type(tune_type):
     """Get all tunes of a specific type"""
     cursor = conn.cursor()
-    cursor.execute(f"SELECT book, title, tune_type, key_signature FROM tunes WHERE tune = '{tune_type}'")
+    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE tune_type = '{tune_type}'")
     result = cursor.fetchall()
     return result
 
@@ -56,7 +56,7 @@ def get_tunes_by_type(tune_type):
 def get_tunes_by_book_type(book_num, tune_type):
     """Get all tunes of a specific type"""
     cursor = conn.cursor()
-    cursor.execute(f"SELECT book, title, tune_type, key_signature FROM tunes WHERE book = '{book_num}' and tune_type = '{tune_type}'")
+    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE book = '{book_num}' and tune_type = '{tune_type}'")
     result = cursor.fetchall()
     return result
 
@@ -81,20 +81,40 @@ root.geometry("500x500")
 
 
 title = tk.Label(root, 
-                 text="Welcome",
+                 text="ABC Music Explorer",
                  font=("Arial", 16, "bold"),
                  wraplength=350,
                  justify="center")
 title.pack()
 
-filter_frame = tk.Frame(root, bg='grey', height=100, width=325)
-filter_frame.pack()
+
+input_frame = tk.Frame(root)
+input_frame.pack()
+
+# search
+def search(search_word):
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE title LIKE '%{search_word}%'")
+    result = cursor.fetchall()
+    return result
+
+def search_filter_bk_type(search_word, bk_num, tune_type):
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE title LIKE '%{search_word}%' and book = '{bk_num}' and tune_type = '{tune_type}'")
+    result = cursor.fetchall()
+    return result
+
+search_label = tk.Label(input_frame, text="Search Title:", justify="left")
+search_label.grid(row=0, column=0)
+
+search_bar = tk.Entry(input_frame)
+search_bar.grid(row=0, column=1)
 
 # filters
-bk_filter = tk.Label(filter_frame, 
-                     text="Filter by Book:").grid(row=0, column=0)
-type_filter = tk.Label(filter_frame, 
-                     text="Filter by Type:").grid(row=1, column=0)
+bk_filter = tk.Label(input_frame, text="Filter by Book:", justify="left")
+bk_filter.grid(row=1, column=0)
+type_filter = tk.Label(input_frame,  text="Filter by Type:", justify="left")
+type_filter.grid(row=2, column=0)
 
 
 # dropdown
@@ -105,27 +125,38 @@ for i in range(stats['books']):
 type_opt = []
 for key in stats['tune_types'].keys():
     type_opt.append(key)
+type_opt = sorted(type_opt)
 
-bk_combo = ttk.Combobox(filter_frame, values=bk_opt, state="readonly")
-bk_combo.grid(row=0, column=1)
-type_combo = ttk.Combobox(filter_frame, values=type_opt, state="readonly")
-type_combo.grid(row=1, column=1)
+bk_combo = ttk.Combobox(input_frame, values=bk_opt, state="readonly")
+bk_combo.grid(row=1, column=1)
+type_combo = ttk.Combobox(input_frame, values=type_opt, state="readonly")
+type_combo.grid(row=2, column=1)
 
 def clear_tree():
     for item in tree.get_children():
         tree.delete(item)
 
-def on_filter():
+def search_filter():
+    search_word = search_bar.get()
     selected_bk = bk_combo.get()
     selected_type = type_combo.get()
-    label.config(text=f"Entered: Book {selected_bk}, Type {selected_type}")
+    message.config(text=f"Entered: Search {search_word} Book {selected_bk}, Type {selected_type}")
 
-    if selected_bk and selected_type:
+    if search_word and selected_bk and selected_type:
+        tunes = search_filter_bk_type(search_word, selected_bk, selected_type)
+        pass
+    elif selected_bk and selected_type:
         tunes = get_tunes_by_book_type(selected_bk, selected_type)
+    elif search_word:
+        tunes = search(search_word)
+        pass
     elif selected_bk:
         tunes = get_tunes_by_book(selected_bk)
-    else:
+    elif selected_type:
         tunes = get_tunes_by_type(selected_type)
+    else:
+        tunes = get_all_tunes()
+
     clear_tree() #reset
     if tunes:
         for row in tunes:
@@ -135,14 +166,23 @@ def on_filter():
     tunes_num.config(text=f"Number of tunes: {len(tunes)}")
 
 
-submit = tk.Button(root, text="Search", command=on_filter)
-submit.pack()
-label = tk.Label(root)
-label.pack()
+def clear():
+    bk_combo.set('')
+    type_combo.set('')
+    search_bar.delete(0, "end")
+
+clear = tk.Button(input_frame, text="Clear", command=clear)
+clear.grid(row=1, column=2)
+
+submit = tk.Button(input_frame, text="Search", command=search_filter)
+submit.grid(row=2, column=2)
+
+message = tk.Label(root)
+message.pack()
 
 
 # all tunes
-cols = ("Book", "Title", "Tune", "Key")
+cols = ("ID", "Book", "Title", "Tune")
 tree = ttk.Treeview(root, columns=cols, show='headings', height=15)
 for col in cols:
     tree.heading(col, text=col)
@@ -150,10 +190,7 @@ for col in cols:
 tunes = get_all_tunes()
 for row in tunes:
         tree.insert('', tk.END, values=row)
-scrollbar = ttk.Scrollbar(root, orient=tk.VERTICAL, command=tree.yview)
-tree.configure(yscrollcommand=scrollbar.set)
 tree.pack()
-scrollbar.pack()
 
 tunes_num = tk.Label(root, text=f"Number of tunes: {len(tunes)}")
 tunes_num.pack()
