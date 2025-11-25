@@ -187,6 +187,20 @@ def clear():
 def reset_msg(msg):
     msg.config(text="")
 
+def deselect_home_tune(event):
+    if event.widget not in (tree, add_btn):
+        selections = tree.selection()
+        for row in selections:
+            tree.selection_remove(row)
+
+def deselect_playlist_tune(event):
+    if event.widget not in (playlist, remove_btn):
+        selections = playlist.selection()
+        for row in selections:
+            playlist.selection_remove(row)
+
+tab1.bind("<Button-1>", deselect_home_tune)
+tab2.bind("<Button-1>", deselect_playlist_tune)
 
 cols = ("ID", "Book", "Title", "Type")
 
@@ -220,7 +234,7 @@ def add_tune():
                 playlist.insert("", tk.END, values=tune)
 
         add_msg.config(text="Added successfully")
-        root.after(2000, lambda: reset_msg(add_msg))
+        root.after(1000, lambda: reset_msg(add_msg))
 
 def remove_tune():
     selections = playlist.selection()
@@ -231,13 +245,13 @@ def remove_tune():
             playlist.delete(row)
 
         remove_msg.config(text="Removed successfully")
-        root.after(2000, lambda: reset_msg(remove_msg))
+        root.after(1000, lambda: reset_msg(remove_msg))
 
 remove_msg = tk.Label(tab2)
 remove_msg.pack()
 
-remove = tk.Button(tab2, text="Remove", command=remove_tune)
-remove.pack()
+remove_btn = tk.Button(tab2, text="Remove", command=remove_tune)
+remove_btn.pack()
 
 clear_q = tk.Button(input_frame, text="Clear", command=clear)
 clear_q.grid(row=1, column=2)
@@ -271,8 +285,8 @@ tree.pack()
 add_msg = tk.Label(tab1)
 add_msg.pack()
 
-add = tk.Button(tab1, text="Add to Playlist", command=add_tune)
-add.pack()
+add_btn = tk.Button(tab1, text="Add to Playlist", command=add_tune)
+add_btn.pack()
 
 tunes_num = tk.Label(tab1, text=f"Number of tunes: {len(tunes)}")
 tunes_num.pack()
