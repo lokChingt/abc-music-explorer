@@ -1,9 +1,9 @@
 import pandas as pd
 import mysql.connector
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
-def connect_mysql():
+def db_connect():
     """connect to MySQL"""
     conn = mysql.connector.connect(host="localhost", user="root", database="abc_music")
     return conn
@@ -11,7 +11,7 @@ def connect_mysql():
 
 def load_tunes_from_db(table_name):
     """Load all tunes from MySQL into DataFrame"""
-    conn = connect_mysql()
+    conn = db_connect()
     query = f"SELECT * FROM {table_name}"
     df = pd.read_sql(query, conn)
     
@@ -32,7 +32,7 @@ def get_statistics(df):
 def get_all_tunes():
     """Get all tunes"""
     cursor = conn.cursor()
-    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes")
+    cursor.execute("SELECT id, book, title, tune_type FROM tunes")
     result = cursor.fetchall()
     return result
 
@@ -71,24 +71,37 @@ def selected_tune_info(id):
 
 
 # load table
-conn = connect_mysql()
+conn = db_connect()
 df = load_tunes_from_db('tunes')
 stats = get_statistics(df)
 
+# gui
 root = tk.Tk()
 root.title('ABC Music Explorer')
-root.geometry("500x500")
+root.geometry("500x600")
+
+notebook = ttk.Notebook(root)
+notebook.pack(fill=tk.BOTH, expand=True)
+
+tab1 = tk.Frame(notebook)
+tab2 = tk.Frame(notebook)
+
+notebook.add(tab1, text="Home")
+notebook.add(tab2, text="Playlist")
 
 
-title = tk.Label(root, 
+title = tk.Label(tab1, 
                  text="ABC Music Explorer",
                  font=("Arial", 16, "bold"),
                  wraplength=350,
                  justify="center")
 title.pack()
 
+exit_btn = tk.Button(tab1, text="exit", command=tab1.destroy)
+exit_btn.pack()
 
-input_frame = tk.Frame(root)
+
+input_frame = tk.Frame(tab1)
 input_frame.pack()
 
 # search
@@ -140,7 +153,7 @@ def search_filter():
     search_word = search_bar.get()
     selected_bk = bk_combo.get()
     selected_type = type_combo.get()
-    message.config(text=f"Entered: Search {search_word} Book {selected_bk}, Type {selected_type}")
+    query_msg.config(text=f"Entered: Search: {search_word}, Book: {selected_bk}, Type: {selected_type}")
 
     if search_word and selected_bk and selected_type:
         tunes = search_filter_bk_type(search_word, selected_bk, selected_type)
@@ -171,31 +184,97 @@ def clear():
     type_combo.set('')
     search_bar.delete(0, "end")
 
-clear = tk.Button(input_frame, text="Clear", command=clear)
-clear.grid(row=1, column=2)
+def reset_msg(msg):
+    msg.config(text="")
+
+
+cols = ("ID", "Book", "Title", "Type")
+
+# playlist
+playlist = ttk.Treeview(tab2, columns=cols, show='headings', height=10, selectmode="extended")
+for col in cols:
+    playlist.heading(col, text=col)
+    # have diff col width for diff col
+    if col == "Title":
+        col_width = 220
+    elif col == "Type": 
+        col_width = 80
+    else:
+        col_width = 50
+    playlist.column(col, width=col_width)
+playlist.pack()
+
+def add_tune():
+    selections = tree.selection()
+    if not selections:
+        messagebox.showwarning("Warning!", "Please select a tune")
+    else:
+        for row in selections:
+            vals = tree.item(row, "values")
+            id = vals[0]
+
+            cursor = conn.cursor()
+            cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE id = {id}")
+            result = cursor.fetchall()
+            for tune in result:
+                playlist.insert("", tk.END, values=tune)
+
+        add_msg.config(text="Added successfully")
+        root.after(2000, lambda: reset_msg(add_msg))
+
+def remove_tune():
+    selections = playlist.selection()
+    if not selections:
+        messagebox.showwarning("Warning!", "Please select a tune")
+    else:
+        for row in selections:
+            playlist.delete(row)
+
+        remove_msg.config(text="Removed successfully")
+        root.after(2000, lambda: reset_msg(remove_msg))
+
+remove_msg = tk.Label(tab2)
+remove_msg.pack()
+
+remove = tk.Button(tab2, text="Remove", command=remove_tune)
+remove.pack()
+
+clear_q = tk.Button(input_frame, text="Clear", command=clear)
+clear_q.grid(row=1, column=2)
 
 submit = tk.Button(input_frame, text="Search", command=search_filter)
 submit.grid(row=2, column=2)
 
-message = tk.Label(root)
-message.pack()
+query_msg = tk.Label(tab1)
+query_msg.pack()
 
 
 # all tunes
-cols = ("ID", "Book", "Title", "Tune")
-tree = ttk.Treeview(root, columns=cols, show='headings', height=15)
+tunes = get_all_tunes()
+
+tree = ttk.Treeview(tab1, columns=cols, show='headings', height=15, selectmode="extended")
 for col in cols:
     tree.heading(col, text=col)
-    tree.column(col, width=100)
-tunes = get_all_tunes()
+    # have diff col width for diff col
+    if col == "Title":
+        col_width = 220
+    elif col == "Type": 
+        col_width = 80
+    else:
+        col_width = 50
+    tree.column(col, width=col_width)
+
 for row in tunes:
         tree.insert('', tk.END, values=row)
 tree.pack()
 
-tunes_num = tk.Label(root, text=f"Number of tunes: {len(tunes)}")
-tunes_num.pack()
+add_msg = tk.Label(tab1)
+add_msg.pack()
 
-clear_btn = tk.Button(root, text="Clear table", command=clear_tree)
-clear_btn.pack()
+add = tk.Button(tab1, text="Add to Playlist", command=add_tune)
+add.pack()
+
+tunes_num = tk.Label(tab1, text=f"Number of tunes: {len(tunes)}")
+tunes_num.pack()
 
 root.mainloop()
