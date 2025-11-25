@@ -84,19 +84,9 @@ def parse_all_tunes(book, lines):
         tune_alt_title.append(alt_title)
 
 
-def connect_mysql():
+def db_connect():
     """connect to MySQL"""
-    config_path = Path(__file__).parent.parent / "config.json"
-
-    with open(config_path) as f:
-        config = json.load(f)
-
-    conn = mysql.connector.connect(
-        host="localhost",
-        user=config["user"],
-        password=config["password"],
-        database=config["database"]
-    )
+    conn = mysql.connector.connect(host="localhost", user="root", database="abc_music")
     return conn
 
 
@@ -149,7 +139,7 @@ for file in files:
     parse_all_tunes(book, lines)
 
 # connect to database
-conn = connect_mysql()
+conn = db_connect()
 cursor = conn.cursor()
 
 # insert data into db
