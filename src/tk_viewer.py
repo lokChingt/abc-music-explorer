@@ -1,7 +1,8 @@
 import pandas as pd
 import mysql.connector
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
+import csv
 
 def db_connect():
     """connect to MySQL"""
@@ -89,6 +90,9 @@ tab2 = tk.Frame(notebook)
 notebook.add(tab1, text="Home")
 notebook.add(tab2, text="Playlist")
 
+input_frame = tk.Frame(tab1)
+input_frame.pack()
+
 
 title = tk.Label(tab1, 
                  text="ABC Music Explorer",
@@ -100,9 +104,6 @@ title.pack()
 exit_btn = tk.Button(tab1, text="exit", command=tab1.destroy)
 exit_btn.pack()
 
-
-input_frame = tk.Frame(tab1)
-input_frame.pack()
 
 # search
 def search(search_word):
@@ -130,7 +131,7 @@ type_filter = tk.Label(input_frame,  text="Filter by Type:", justify="left")
 type_filter.grid(row=2, column=0)
 
 
-# dropdown
+# search dropdown
 bk_opt = []
 for i in range(stats['books']):
     bk_opt.append(i+1)
@@ -179,7 +180,7 @@ def search_filter():
     tunes_num.config(text=f"Number of tunes: {len(tunes)}")
 
 
-def clear():
+def clear_q():
     bk_combo.set('')
     type_combo.set('')
     search_bar.delete(0, "end")
@@ -247,14 +248,32 @@ def remove_tune():
         remove_msg.config(text="Removed successfully")
         root.after(1000, lambda: reset_msg(remove_msg))
 
+def save_playlist():
+    file_path = filedialog.asksaveasfilename(
+        defaultextension=".csv",
+        filetypes=(("Text files", "*.csv"), ("All files", "*.*"))
+    )
+    if file_path:
+        with open(file_path, 'w') as file:
+            csvwriter = csv.writer(file, delimiter=',')
+            csvwriter.writerow(cols)
+            for row_id in playlist.get_children():
+                row = tree.item(row_id, "values")
+                csvwriter.writerow(row)
+            
+
+
 remove_msg = tk.Label(tab2)
 remove_msg.pack()
 
 remove_btn = tk.Button(tab2, text="Remove", command=remove_tune)
 remove_btn.pack()
 
-clear_q = tk.Button(input_frame, text="Clear", command=clear)
-clear_q.grid(row=1, column=2)
+save_btn = tk.Button(tab2, text="Save as CSV", command=save_playlist)
+save_btn.pack()
+
+clear_q_btn = tk.Button(input_frame, text="Clear", command=clear_q)
+clear_q_btn.grid(row=1, column=2)
 
 submit = tk.Button(input_frame, text="Search", command=search_filter)
 submit.grid(row=2, column=2)
