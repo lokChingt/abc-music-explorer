@@ -149,4 +149,4 @@ db_insert_alt_titles()
 conn.close()
 
 # feedback
-print("Parsed and Inserted into the Database")
+print("Parsed and Inserted into the Database Successfully")
