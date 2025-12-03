@@ -253,6 +253,10 @@ def save_playlist():
                 row = tree.item(row_id, "values")
                 csvwriter.writerow(row)
 
+    # feebback
+    saved_msg.config(text='Playlist has been saved!')
+    root.after(1000, lambda: reset_msg(saved_msg))
+
 
 # load table
 conn = db_connect()
@@ -418,6 +422,9 @@ remove_btn.pack()
 
 clear_btn = tk.Button(tab2, text="Clear", command=lambda: clear_tree(playlist))
 clear_btn.pack()
+
+saved_msg = tk.Label(tab2)
+saved_msg.pack()
 
 save_btn = tk.Button(tab2, text="Save as CSV", command=save_playlist)
 save_btn.pack()
