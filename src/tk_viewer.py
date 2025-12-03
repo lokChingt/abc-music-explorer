@@ -6,6 +6,7 @@ import csv
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+
 def db_connect():
     """connect to MySQL"""
     conn = mysql.connector.connect(host="localhost", user="root", database="abc_music")
@@ -78,10 +79,6 @@ def search_tunes(df, search_term):
     return df[df['title'].str.contains(search_term, case=False)]
 
 
-def selected_tune_info(id):
-    pass
-
-
 # load table
 conn = db_connect()
 df = load_table_from_db('tunes')
@@ -97,6 +94,7 @@ root.geometry("500x600")
 notebook = ttk.Notebook(root)
 notebook.pack(fill=tk.BOTH, expand=True)
 
+# tabs
 tab1 = tk.Frame(notebook)
 tab2 = tk.Frame(notebook)
 tab3 = tk.Frame(notebook)
@@ -105,20 +103,18 @@ notebook.add(tab1, text="Home")
 notebook.add(tab2, text="Playlist")
 notebook.add(tab3, text="Statistics")
 
-input_frame = tk.Frame(tab1)
-input_frame.pack()
-
-
-title = tk.Label(tab1, 
+title = tk.Label(tab1,
                  text="ABC Music Explorer",
                  font=("Arial", 16, "bold"),
                  wraplength=350,
                  justify="center")
 title.pack()
 
-exit_btn = tk.Button(tab1, text="exit", command=tab1.destroy)
+exit_btn = tk.Button(tab1, text="Exit", command=root.destroy)
 exit_btn.pack()
 
+input_frame = tk.Frame(tab1)
+input_frame.pack()
 
 # search
 def search(search_word):
@@ -161,9 +157,10 @@ bk_combo.grid(row=1, column=1)
 type_combo = ttk.Combobox(input_frame, values=type_opt, state="readonly")
 type_combo.grid(row=2, column=1)
 
-def clear_tree():
-    for item in tree.get_children():
-        tree.delete(item)
+def clear_tree(tree_name):
+    """Clear all tunes in Treeview"""
+    for item in tree_name.get_children():
+        tree_name.delete(item)
 
 def search_filter():
     search_word = search_bar.get()
@@ -186,7 +183,7 @@ def search_filter():
     else:
         tunes = get_all_tunes()
 
-    clear_tree() #reset
+    clear_tree(tree) #reset
     if tunes:
         for row in tunes:
             tree.insert('', tk.END, values=row)
@@ -221,7 +218,14 @@ tab2.bind("<Button-1>", deselect_playlist_tune)
 cols = ("ID", "Book", "Title", "Type")
 
 # playlist
-playlist = ttk.Treeview(tab2, columns=cols, show='headings', height=10, selectmode="extended")
+playlist_title = tk.Label(tab2, 
+                          text="Tune Playlist",
+                          font=("Arial", 16, "bold"),
+                          wraplength=350,
+                          justify="center")
+playlist_title.pack()
+
+playlist = ttk.Treeview(tab2, columns=cols, show='headings', height=20, selectmode="extended")
 for col in cols:
     playlist.heading(col, text=col)
     # have diff col width for diff col
@@ -238,13 +242,23 @@ def add_tune():
     selections = tree.selection()
     if not selections:
         messagebox.showwarning("Warning!", "Please select a tune")
+        return
     else:
         for row in selections:
             vals = tree.item(row, "values")
             id = vals[0]
 
-            cursor = conn.cursor()
-            cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE id = {id}")
+            # get all tune_id in playlist
+            playlist_id = {playlist.item(r, "values")[0] for r in playlist.get_children()}
+
+            # check if tune already added
+            if id not in playlist_id:
+                cursor = conn.cursor()
+                cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE id = {id}")
+            else:
+                messagebox.showwarning("Warning!", "Tune already added")
+                return
+
             result = cursor.fetchall()
             for tune in result:
                 playlist.insert("", tk.END, values=tune)
@@ -283,6 +297,9 @@ remove_msg.pack()
 
 remove_btn = tk.Button(tab2, text="Remove", command=remove_tune)
 remove_btn.pack()
+
+clear_btn = tk.Button(tab2, text="Clear", command=lambda: clear_tree(playlist))
+clear_btn.pack()
 
 save_btn = tk.Button(tab2, text="Save as CSV", command=save_playlist)
 save_btn.pack()
