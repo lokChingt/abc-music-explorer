@@ -442,7 +442,7 @@ type_counts = df['tune_type'].value_counts().head(5)
 sorted_type = type_counts.sort_values()
 
 ax1.pie(sorted_type.values, labels=sorted_type.index, textprops={'fontsize': 5}, autopct='%1.1f%%')
-ax1.set_title('Tune Type Distribution', fontsize=7)
+ax1.set_title('Top 5 Most Used Tune Type', fontsize=7)
 
 
 # tune with the most tune_alt_titles [bar chart]
