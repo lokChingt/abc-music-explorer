@@ -1,3 +1,7 @@
+CREATE DATABASE abc_music;
+
+USE abc_music;
+
 DROP TABLE IF EXISTS tunes;
 CREATE TABLE tunes
 (
