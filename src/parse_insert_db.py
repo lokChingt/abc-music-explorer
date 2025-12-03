@@ -8,11 +8,10 @@ Course: TU850/2
 import pandas as pd
 import mysql.connector
 from pathlib import Path
-import json
 
 def load_abc_file(file_path):
     """Load ABC file into list of lines"""
-    with open(file_path, 'r', encoding='latin-1') as f:
+    with open(file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
         
     return lines
@@ -49,7 +48,7 @@ def parse_tune(book, tune_lines):
                 tune_alt_title['alt_title'].append(line[start_i:].strip())
 
         elif line.startswith('R:'):
-            tune['tune_type'] = line[start_i:].strip()
+            tune['tune_type'] = line[start_i:].strip().lower()
 
         elif line.startswith('K:'):
             tune['key_signature'] = line[start_i:].strip()
@@ -89,9 +88,17 @@ def db_connect():
     conn = mysql.connector.connect(host="localhost", user="root", database="abc_music")
     return conn
 
+def clear_table(table_name):
+    cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
+    cursor.execute(f"TRUNCATE TABLE {table_name}")
+    cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
+
 
 def db_insert_tunes():
     """insert data into tunes"""
+    clear_table('tune_alt_titles')
+    clear_table('tunes')
+
     cols = tunes[0].keys() 
 
     placeholders = ",".join(["%s"] * len(cols))
@@ -128,7 +135,7 @@ def db_insert_alt_titles():
 # find all abc files
 folder_path = Path("abc_books/")
 files = [f for f in folder_path.rglob("*.abc") if f.is_file()]
-files = sorted(files) # Sort alphabetically
+files = sorted(files) # sort alphabetically
 
 # parse all tunes and alt_titles
 tunes = []
@@ -148,3 +155,6 @@ db_insert_alt_titles()
 
 # close db connection
 conn.close()
+
+# feedback
+print("Parsed and Inserted into the Database")
