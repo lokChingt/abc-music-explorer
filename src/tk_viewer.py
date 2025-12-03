@@ -3,6 +3,8 @@ import mysql.connector
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import csv
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 def db_connect():
     """connect to MySQL"""
@@ -10,10 +12,19 @@ def db_connect():
     return conn
 
 
-def load_tunes_from_db(table_name):
+def load_table_from_db(table_name):
     """Load all tunes from MySQL into DataFrame"""
     conn = db_connect()
     query = f"SELECT * FROM {table_name}"
+    df = pd.read_sql(query, conn)
+    
+    conn.close()
+    return df
+
+def join_tables():
+    """Join two tables"""
+    conn = db_connect()
+    query = f"SELECT * FROM tunes JOIN tune_alt_titles ON tunes.id = tune_alt_titles.tune_id"
     df = pd.read_sql(query, conn)
     
     conn.close()
@@ -49,7 +60,7 @@ def get_tunes_by_book(book_num):
 def get_tunes_by_type(tune_type):
     """Get all tunes of a specific type"""
     cursor = conn.cursor()
-    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE tune_type = '{tune_type}'")
+    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE tune_type LIKE'%{tune_type}%'")
     result = cursor.fetchall()
     return result
 
@@ -73,7 +84,9 @@ def selected_tune_info(id):
 
 # load table
 conn = db_connect()
-df = load_tunes_from_db('tunes')
+df = load_table_from_db('tunes')
+df2 = load_table_from_db('tune_alt_titles')
+joined_df = join_tables()
 stats = get_statistics(df)
 
 # gui
@@ -86,9 +99,11 @@ notebook.pack(fill=tk.BOTH, expand=True)
 
 tab1 = tk.Frame(notebook)
 tab2 = tk.Frame(notebook)
+tab3 = tk.Frame(notebook)
 
 notebook.add(tab1, text="Home")
 notebook.add(tab2, text="Playlist")
+notebook.add(tab3, text="Statistics")
 
 input_frame = tk.Frame(tab1)
 input_frame.pack()
@@ -114,7 +129,7 @@ def search(search_word):
 
 def search_filter_bk_type(search_word, bk_num, tune_type):
     cursor = conn.cursor()
-    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE title LIKE '%{search_word}%' and book = '{bk_num}' and tune_type = '{tune_type}'")
+    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE title LIKE '%{search_word}%' and book = '{bk_num}' and tune_type LIKE '%{tune_type}%'")
     result = cursor.fetchall()
     return result
 
@@ -309,5 +324,34 @@ add_btn.pack()
 
 tunes_num = tk.Label(tab1, text=f"Number of tunes: {len(tunes)}")
 tunes_num.pack()
+
+
+# plots
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(5, 5))
+
+# top 5 most tune_type [pie chart]
+type_counts = df['tune_type'].value_counts().head(5)
+sorted_type = type_counts.sort_values()
+
+ax1.pie(sorted_type.values, labels=sorted_type.index, textprops={'fontsize': 5}, autopct='%1.1f%%')
+ax1.set_title('Tune Type Distribution', fontsize=7)
+
+
+# tune with the most tune_alt_titles [bar chart]
+alt_title_count = joined_df.groupby('title')['alt_title'].count()
+sorted_alt_title = alt_title_count.sort_values(ascending=False).head(5)
+
+ax2.bar(sorted_alt_title.index, sorted_alt_title.values)
+ax2.set_title('Top 5 Tune with the Most Alternative Titles', fontsize=7)
+ax2.set_xlabel('Tune', fontsize=5)
+ax2.set_ylabel('Number of Alternative Titles', fontsize=5)
+ax2.tick_params(axis='x', rotation=15, labelsize=5)
+ax2.tick_params(axis='y', labelsize=5)
+
+# embed into tkinter
+fig.tight_layout()
+canvas = FigureCanvasTkAgg(fig, tab3)
+canvas.draw()
+canvas.get_tk_widget().pack()
 
 root.mainloop()
