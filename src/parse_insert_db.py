@@ -1,11 +1,3 @@
-"""
-Data Centric Programming Assignment 2025
-Name: Lok Ching Tam
-Student Number: C24385243
-Course: TU850/2
-"""
-
-import pandas as pd
 import mysql.connector
 from pathlib import Path
 
