@@ -53,6 +53,7 @@ def get_all_tunes():
     return result
 
 
+# filter
 def get_tunes_by_book(book_num):
     """Get all tunes from a specific book"""
     cursor = conn.cursor()
@@ -64,7 +65,7 @@ def get_tunes_by_book(book_num):
 def get_tunes_by_type(tune_type):
     """Get all tunes of a specific type"""
     cursor = conn.cursor()
-    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE tune_type LIKE'%{tune_type}%'")
+    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE tune_type ='{tune_type}'")
     result = cursor.fetchall()
     return result
 
@@ -86,9 +87,23 @@ def search(search_word):
     return result
 
 def search_filter_bk_type(search_word, bk_num, tune_type):
-    """Search tunes by book number and tune_type"""
+    """Search tunes with search word & by book number and tune_type"""
     cursor = conn.cursor()
-    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE title LIKE '%{search_word}%' and book = '{bk_num}' and tune_type LIKE '%{tune_type}%'")
+    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE title LIKE '%{search_word}%' and book = '{bk_num}' and tune_type = '{tune_type}'")
+    result = cursor.fetchall()
+    return result
+
+def search_filter_bk(search_word, bk_num):
+    """Search tunes with search word & by book number"""
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE title LIKE '%{search_word}%' and book = '{bk_num}'")
+    result = cursor.fetchall()
+    return result
+
+def search_filter_type(search_word, tune_type):
+    """Search tunes with search word & by tune_type"""
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT id, book, title, tune_type FROM tunes WHERE title LIKE '%{search_word}%' and tune_type = '{tune_type}'")
     result = cursor.fetchall()
     return result
 
@@ -107,20 +122,25 @@ def search_filter():
     query_msg.config(text=f"Entered: Search: {search_word}, Book: {selected_bk}, Type: {selected_type}")
 
     # get the search results
-    if search_word and selected_bk and selected_type:
-        tunes = search_filter_bk_type(search_word, selected_bk, selected_type)
-        pass
-    elif selected_bk and selected_type:
-        tunes = get_tunes_by_book_type(selected_bk, selected_type)
-    elif search_word:
-        tunes = search(search_word)
-        pass
-    elif selected_bk:
-        tunes = get_tunes_by_book(selected_bk)
-    elif selected_type:
-        tunes = get_tunes_by_type(selected_type)
-    else:
-        tunes = get_all_tunes()
+    if search_word:
+        if selected_bk and selected_type:
+            tunes = search_filter_bk_type(search_word, selected_bk, selected_type)
+        elif selected_bk:
+            tunes = search_filter_bk(search_word, selected_bk)
+        elif selected_type:
+            tunes = search_filter_type(search_word, selected_type)
+        else:
+            tunes = search(search_word)
+    else: # no search word
+        if selected_bk and selected_type:
+            tunes = get_tunes_by_book_type(selected_bk, selected_type)
+        elif selected_bk:
+            tunes = get_tunes_by_book(selected_bk)
+        elif selected_type:
+            tunes = get_tunes_by_type(selected_type)
+        else: # no input
+            # show all tunes
+            tunes = get_all_tunes()
 
     clear_tree(tree) #reset
 
@@ -319,8 +339,8 @@ clear_q_btn = tk.Button(input_frame, text="Clear", command=clear_q)
 clear_q_btn.grid(row=1, column=2)
 
 # button to search tunes
-search = tk.Button(input_frame, text="Search", command=search_filter)
-search.grid(row=2, column=2)
+search_btn = tk.Button(input_frame, text="Search", command=search_filter)
+search_btn.grid(row=2, column=2)
 
 # display user input
 query_msg = tk.Label(tab1)
