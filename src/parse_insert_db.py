@@ -26,14 +26,20 @@ def parse_tune(book, tune_lines):
         'alt_title': []
     }
 
+    # default primary title is not found
     primary_title = False
     
     """add values into tune & tune_alt_title dict"""
     for line in tune_lines:
-        start_i = 2
+        # skip 'X:', 'T:' ... etc
+        colon_index = line.index(':')
+        start_i = colon_index + 1
+
+        # tune id
         if line.startswith('X:'):
             tune['tune_id'] = line[start_i:].strip()
 
+        # title
         elif line.startswith('T:'):
             if primary_title == False: # first title
                 tune['title'] = line[start_i:].strip()
@@ -41,9 +47,11 @@ def parse_tune(book, tune_lines):
             else:                      # alt title
                 tune_alt_title['alt_title'].append(line[start_i:].strip())
 
+        # tune type
         elif line.startswith('R:'):
             tune['tune_type'] = line[start_i:].strip().lower()
 
+        # key
         elif line.startswith('K:'):
             tune['key_signature'] = line[start_i:].strip()
             return tune, tune_alt_title
@@ -70,6 +78,8 @@ def parse_all_tunes(book, lines):
                 current_tune_lines += [line]
                 in_tune = True
     
+    # last tune not parsed because of no blank line below (last line: '...\n')
+
     # parse the last tune in the each file
     if current_tune_lines:
         tune, alt_title = parse_tune(book, current_tune_lines)
