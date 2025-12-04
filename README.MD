@@ -8,7 +8,7 @@ Name: Lok Ching Tam
 
 Student Number: C24385243
 
-Class Group: TU850 Data Science & AI
+Class Group: TU850/2 Data Science & AI
 
 # Screenshots
 - Home Page
@@ -26,6 +26,49 @@ Class Group: TU850 Data Science & AI
 # Description of the project
 This is a Tkinter-based program that provides interactive user interface for users to explore tunes. Users can search, add their favourite tunes into playlist, export playlist as CSV file, and view plots generated from the tunes data.
 
+# Folder Structure
+```
+abc-music-explorer/
+├── abc_books/
+|   └── 1/
+|   └── 2/
+├── src/
+│   └── create_tables.sql
+│   └── parse_insert_db.py
+│   └── tk_viewer.py
+├── docs/
+│   └── screenshots/
+│       └── home_page.png
+│       └── search_page.png
+│       └── playlist_page.png
+│       └── statistics_page.png
+├── README.md
+├── requirements.txt
+├── assignment.md
+├── LICENCE
+├── .gitignore
+```
+
+# Database Tables
+## 1. tunes Table
+| Column | Data Type |
+|--------|-----------|
+| id | INT AUTO_INCREMENT PK |
+| book | INT NOT NULL |
+| tune_id | VARCHAR(20) NOT NULL |
+| title | VARCHAR(255) |
+| tune_type | VARCHAR(50) |
+| key_signature | VARCHAR(20) |
+| notation | TEXT |
+
+## 2. tune_alt_titles Table
+| Column | Data Type |
+|--------|-----------|
+| id | INT AUTO_INCREMENT PK |
+| tune_id | INT NOT NULL FK |
+| alt_title | VARCHAR(255) |
+
+
 # Instructions for use
 ## 1. Clone this repository (`abc-music-explorer`)
 ```bash
@@ -34,7 +77,7 @@ git clone https://github.com/lokChingt/abc-music-explorer.git
 
 ## 2. Install package requirements
 ```bash
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 ## 3. Create database and tables for `tunes` and `tune_alt_titles`
@@ -59,7 +102,28 @@ python src/tk_viewer.py
 ***Just need to do step 5 everytime you use ABC Music Explorer**
 
 # How it works:
-## 0. Activate Tkinter (View all tunes)
+## 1. Parse ABC files
+- Use Pathlib to loop over the `abc_books` folder, identify all abc files and return a list of file path
+- Load each file into lines
+- Parse the tunes & alternative titles from the lines in each file 
+- Then add into the list of tunes dictionary & the list ofalternative titles dictionary
+
+## 2. Insert tunes & alternative titles into database
+- Call function to clear the tables first
+- Use SQL quesies to insert the tunes and alternative titles into database
+- A message of inserted successfully will printed if success
+
+## 3. GUI - Tkinter
+- Initilise: Root window is created with title, window size
+- Components: Add widgets such as tabs, labels, buttons, entry, comboboxes
+- Logic: Call function when button is clicked or event is triggered
+- User Input: Get input from entry and/or comboboxes and apply into SQL queries
+- Error: Message box will appear if invalid search
+
+
+# Features:
+## 0. View all tunes
+- Activate Tkinter
 ```python
 python src/tk_viewer.py
 ```
