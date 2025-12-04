@@ -112,6 +112,10 @@ def clear_tree(tree_name):
     """Clear all tunes in Treeview"""
     for item in tree_name.get_children():
         tree_name.delete(item)
+    
+    if tree_name == playlist:
+        # update playlist tunes_num
+        tunes_num.config(text=f"Number of tunes: {len(playlist.get_children())}")
 
 def search_filter():
     """Search by the user input"""
@@ -188,13 +192,12 @@ def add_tune():
         added_tune_id = []
 
         # get all tune_id in playlist
-        playlist_id = {playlist.item(r, "values")[0] for r in playlist.get_children()}
+        playlist_id = {playlist.item(row, "values")[0] for row in playlist.get_children()}
 
         # iterate over selected tune
         for row in selections:
             # get id of selected tune
-            vals = tree.item(row, "values")
-            id = vals[0]
+            id = tree.item(row, "values")[0]
 
             # check if tune already added
             if id in playlist_id:
@@ -213,7 +216,10 @@ def add_tune():
             
         # added message
         add_msg.config(text="Added successfully")
-        root.after(1000, lambda: reset_msg(add_msg))
+        root.after(1000, reset_msg, add_msg)
+
+        # update playlist tunes_num
+        tunes_num.config(text=f"Number of tunes: {len(playlist.get_children())}")
 
 
 def remove_tune():
@@ -230,7 +236,10 @@ def remove_tune():
 
         # removed message
         remove_msg.config(text="Removed successfully")
-        root.after(1000, lambda: reset_msg(remove_msg))
+        root.after(1000, reset_msg, remove_msg)
+
+        # update playlist tunes_num
+        tunes_num.config(text=f"Number of tunes: {len(playlist.get_children())}")
 
 
 def save_playlist():
@@ -255,7 +264,7 @@ def save_playlist():
 
     # feebback
     saved_msg.config(text='Playlist has been saved!')
-    root.after(1000, lambda: reset_msg(saved_msg))
+    root.after(1000, reset_msg, saved_msg)
 
 
 # load table
@@ -285,10 +294,7 @@ notebook.add(tab3, text="Statistics")
 
 # === tab1: home page ===
 # home title
-title = tk.Label(tab1,
-                 text="ABC Music Explorer",
-                 font=("Arial", 16, "bold"),
-                 justify="center")
+title = tk.Label(tab1, text="ABC Music Explorer", font=("PT Serif", 16, "bold"), justify="center")
 title.pack()
 
 # button to end program
@@ -354,7 +360,7 @@ query_msg.pack()
 tunes = get_all_tunes()
 cols = ("ID", "Book", "Title", "Type")
 
-tree = ttk.Treeview(tab1, columns=cols, show='headings', height=15, selectmode="extended")
+tree = ttk.Treeview(tab1, columns=cols, show='headings', height=15)
 for col in cols:
     tree.heading(col, text=col)
     # have diff col width for diff col
@@ -390,14 +396,11 @@ tab1.bind("<Button-1>", lambda event: deselect_tree(event, tree))
 
 # === tab2: playlist page ===
 # playlist title
-playlist_title = tk.Label(tab2, 
-                          text="Tune Playlist",
-                          font=("Arial", 16, "bold"),
-                          justify="center")
+playlist_title = tk.Label(tab2, text="Tune Playlist", font=("PT Serif", 16, "bold"), justify="center")
 playlist_title.pack()
 
 # --- playlist treeview ---
-playlist = ttk.Treeview(tab2, columns=cols, show='headings', height=20, selectmode="extended")
+playlist = ttk.Treeview(tab2, columns=cols, show='headings', height=20)
 for col in cols:
     playlist.heading(col, text=col)
     # have diff col width for diff col
