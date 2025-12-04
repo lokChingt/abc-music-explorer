@@ -295,7 +295,7 @@ title.pack()
 exit_btn = tk.Button(tab1, text="Exit", command=root.destroy)
 exit_btn.pack()
 
-# frame to store inputs in grid
+# --- frame to store inputs in grid ---
 input_frame = tk.Frame(tab1)
 input_frame.pack()
 
@@ -350,7 +350,7 @@ query_msg = tk.Label(tab1)
 query_msg.pack()
 
 
-# home treeview
+# --- home treeview --- 
 tunes = get_all_tunes()
 cols = ("ID", "Book", "Title", "Type")
 
@@ -396,7 +396,7 @@ playlist_title = tk.Label(tab2,
                           justify="center")
 playlist_title.pack()
 
-# playlist treeview
+# --- playlist treeview ---
 playlist = ttk.Treeview(tab2, columns=cols, show='headings', height=20, selectmode="extended")
 for col in cols:
     playlist.heading(col, text=col)
@@ -411,7 +411,7 @@ for col in cols:
 playlist.pack()
 
 
-# playlist tab labels & buttons
+# --- playlist tab labels & buttons ---
 remove_msg = tk.Label(tab2)
 remove_msg.pack()
 
