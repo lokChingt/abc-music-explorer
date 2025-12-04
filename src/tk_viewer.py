@@ -268,7 +268,7 @@ stats = get_statistics(df)
 # gui
 root = tk.Tk()
 root.title('ABC Music Explorer')
-root.geometry("500x600")
+root.geometry("500x650")
 
 notebook = ttk.Notebook(root)
 notebook.pack(fill="both", expand=True)
@@ -288,7 +288,6 @@ notebook.add(tab3, text="Statistics")
 title = tk.Label(tab1,
                  text="ABC Music Explorer",
                  font=("Arial", 16, "bold"),
-                 wraplength=350,
                  justify="center")
 title.pack()
 
@@ -394,7 +393,6 @@ tab1.bind("<Button-1>", lambda event: deselect_tree(event, tree))
 playlist_title = tk.Label(tab2, 
                           text="Tune Playlist",
                           font=("Arial", 16, "bold"),
-                          wraplength=350,
                           justify="center")
 playlist_title.pack()
 
@@ -428,6 +426,9 @@ saved_msg.pack()
 
 save_btn = tk.Button(tab2, text="Save as CSV", command=save_playlist)
 save_btn.pack()
+
+tunes_num = tk.Label(tab2, text=f"Number of tunes: {len(playlist.get_children())}")
+tunes_num.pack()
 
 # deselect tune when click outside the playlist
 tab2.bind("<Button-1>", lambda event: deselect_tree(event, playlist))
