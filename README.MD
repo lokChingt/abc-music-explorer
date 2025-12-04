@@ -196,7 +196,8 @@ python src/tk_viewer.py
 
 - When selecting the tune(s), you can click anywhere outside the table to deselect the tune(s)
 - Add/remove/save messages only appears for 1 second after the buttons are clicked, to make the interface simple and clean and avoid confusion
-
+- Message box is shown when error triggered
+- Number of tunes is display for Home page and Playlist page
 
 # What I learned
 
