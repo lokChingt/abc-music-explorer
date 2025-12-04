@@ -11,6 +11,7 @@ def load_abc_file(file_path):
 
 def parse_tune(book, tune_lines):
     """Parse a single tune from lines"""
+    # dictionary for each tune
     tune = {
         'book': book,
         'tune_id': None,
@@ -20,6 +21,7 @@ def parse_tune(book, tune_lines):
         'notation': ''.join(tune_lines)
     }
 
+    # dictionary for each tune alt title(s)
     tune_alt_title = {
         'alt_title': []
     }
@@ -62,7 +64,7 @@ def parse_all_tunes(book, lines):
                 """Call parse_tune() for each complete tune"""
                 tune, alt_title = parse_tune(book, current_tune_lines)
                 tunes.append(tune)
-                tune_alt_title.append(alt_title)
+                tune_alt_titles.append(alt_title)
                 current_tune_lines = [] # reset for each tune
             else:
                 current_tune_lines += [line]
@@ -72,25 +74,23 @@ def parse_all_tunes(book, lines):
     if current_tune_lines:
         tune, alt_title = parse_tune(book, current_tune_lines)
         tunes.append(tune)
-        tune_alt_title.append(alt_title)
+        tune_alt_titles.append(alt_title)
 
 
 def db_connect():
-    """connect to MySQL"""
+    """Connect to MySQL"""
     conn = mysql.connector.connect(host="localhost", user="root", database="abc_music")
     return conn
 
 def clear_table(table_name):
+    """Remove all rows in the table"""
     cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
     cursor.execute(f"TRUNCATE TABLE {table_name}")
     cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
 
 
 def db_insert_tunes():
-    """insert data into tunes"""
-    clear_table('tune_alt_titles')
-    clear_table('tunes')
-
+    """Insert data into tunes"""
     cols = tunes[0].keys() 
 
     placeholders = ",".join(["%s"] * len(cols))
@@ -107,10 +107,12 @@ def db_insert_tunes():
 
 
 def db_insert_alt_titles():
-    """insert data into tune_alt_titles"""
+    """Insert data into tune_alt_titles"""
+    # list of tuple to store all alt_titles of each tune
     vals = []
 
-    for tune_id, row in enumerate(tune_alt_title, 1):
+    # get tune_id by adding one on the index
+    for tune_id, row in enumerate(tune_alt_titles, 1):
         alt_titles = row['alt_title']
         if alt_titles:
             for alt_title in alt_titles:
@@ -118,6 +120,7 @@ def db_insert_alt_titles():
         else:  # no alt_titles
             vals.append((tune_id, None))
 
+    # insert alt_titles
     query = "INSERT INTO tune_alt_titles (tune_id, alt_title) VALUES (%s, %s)"
     cursor.executemany(query, vals)
     conn.commit()
@@ -131,7 +134,7 @@ files = sorted(files) # sort alphabetically
 
 # parse all tunes and alt_titles
 tunes = []
-tune_alt_title = []
+tune_alt_titles = []
 for file in files:
     lines = load_abc_file(file)
     book = file.parent.name
@@ -140,6 +143,10 @@ for file in files:
 # connect to database
 conn = db_connect()
 cursor = conn.cursor()
+
+# remove all rows existed tables
+clear_table('tune_alt_titles')
+clear_table('tunes')
 
 # insert data into db
 db_insert_tunes()
