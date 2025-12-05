@@ -18,7 +18,7 @@ Class Group: TU850/2 Data Science & AI
 <img src="docs/screenshots/search_page.png" alt="search_page" width="500px">
 
 - Playlist Page
-<img src="docs/screenshots/search_page.png" alt="search_page" width="500px">
+<img src="docs/screenshots/playlist_page.png" alt="playlist_page" width="500px">
 
 - Statistics Page
 <img src="docs/screenshots/statistics_page.png" alt="statistics_page" width="500px">
