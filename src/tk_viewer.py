@@ -115,7 +115,7 @@ def clear_tree(tree_name):
     
     if tree_name == playlist:
         # update playlist tunes_num
-        tunes_num.config(text=f"Number of tunes: {len(playlist.get_children())}")
+        playlist_tunes_num.config(text=f"Number of tunes: {len(playlist.get_children())}")
 
 def search_filter():
     """Search by the user input"""
@@ -219,7 +219,7 @@ def add_tune():
         root.after(1000, reset_msg, add_msg)
 
         # update playlist tunes_num
-        tunes_num.config(text=f"Number of tunes: {len(playlist.get_children())}")
+        playlist_tunes_num.config(text=f"Number of tunes: {len(playlist.get_children())}")
 
 
 def remove_tune():
@@ -239,7 +239,7 @@ def remove_tune():
         root.after(1000, reset_msg, remove_msg)
 
         # update playlist tunes_num
-        tunes_num.config(text=f"Number of tunes: {len(playlist.get_children())}")
+        playlist_tunes_num.config(text=f"Number of tunes: {len(playlist.get_children())}")
 
 
 def save_playlist():
@@ -430,8 +430,8 @@ saved_msg.pack()
 save_btn = tk.Button(tab2, text="Save as CSV", command=save_playlist)
 save_btn.pack()
 
-tunes_num = tk.Label(tab2, text=f"Number of tunes: {len(playlist.get_children())}")
-tunes_num.pack()
+playlist_tunes_num = tk.Label(tab2, text=f"Number of tunes: {len(playlist.get_children())}")
+playlist_tunes_num.pack()
 
 # deselect tune when click outside the playlist
 tab2.bind("<Button-1>", lambda event: deselect_tree(event, playlist))
